@@ -30,4 +30,4 @@ TODO: Inserir link para vídeo do projeto funcionando
 
 ### Músicas e Direitos autorais
 
-TODO: Listar músicas e dar crédio da onde saiu:
+A música escolhida é a música tema para "O Poderoso Chefão", composto por Nino Rota e adaptado para monofonia por Robson Couto (disponível em https://github.com/robsoncouto/arduino-songs)
