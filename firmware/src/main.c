@@ -4,10 +4,17 @@
 #include "gfx_mono_text.h"
 #include "sysfont.h"
 
+// Config Buzzer
 #define BUZZER_PIO PIOA
 #define BUZZER_PIO_ID ID_PIOA
 #define BUZZER_PIO_IDX 24
 #define BUZZER_PIO_IDX_MASK (1<<BUZZER_PIO_IDX)
+
+// Config botão start/pause (BUT1)
+#define START_PIO PIOD
+#define START_PIO_ID ID_PIOD
+#define START_PIO_IDX 28
+#define START_PIO_IDX_MASK (1u<<START_PIO_IDX)
 
 void set_buzzer(){
 	pio_set(BUZZER_PIO, BUZZER_PIO_IDX_MASK);
@@ -15,6 +22,10 @@ void set_buzzer(){
 
 void clear_buzzer(){
 	pio_clear(BUZZER_PIO, BUZZER_PIO_IDX_MASK);
+}
+
+int get_startstop(){
+	return pio_get(START_PIO, PIO_INPUT, START_PIO_IDX_MASK);
 }
 
 void init(){
@@ -29,6 +40,11 @@ void init(){
 	//Configurando Buzzer
 	pmc_enable_periph_clk(BUZZER_PIO_ID);
 	pio_set_output(BUZZER_PIO, BUZZER_PIO_IDX_MASK, 0, 0, 0);
+
+	//BUT1
+	pmc_enable_periph_clk(START_PIO_ID);
+	pio_set_input(START_PIO, START_PIO_IDX_MASK, PIO_DEFAULT);
+	pio_pull_up(START_PIO, START_PIO_IDX_MASK, 1);
 }
 
 int main (void)
@@ -45,6 +61,8 @@ int main (void)
 		delay_us(500);
 		clear_buzzer();
 		delay_us(500);
-
+		char teste[3];
+		sprintf(teste, "%d", get_startstop());
+		gfx_mono_draw_string(teste, 0, 16, &sysfont);
 	}
 }
