@@ -16,6 +16,12 @@
 #define START_PIO_IDX 28
 #define START_PIO_IDX_MASK (1u<<START_PIO_IDX)
 
+// Config botão de seleção (BUT2)
+#define SELECAO_PIO PIOC
+#define SELECAO_PIO_ID ID_PIOC
+#define SELECAO_PIO_IDX 31
+#define SELECAO_PIO_IDX_MASK (1u << BUT2_PIO_IDX)
+
 void set_buzzer(){
 	pio_set(BUZZER_PIO, BUZZER_PIO_IDX_MASK);
 }
@@ -26,6 +32,10 @@ void clear_buzzer(){
 
 int get_startstop(){
 	return pio_get(START_PIO, PIO_INPUT, START_PIO_IDX_MASK);
+}
+
+int get_selecao(){
+	return pio_get(SELECAO_PIO, PIO_INPUT, SELECAO_PIO_IDX_MASK);
 }
 
 void init(){
@@ -61,8 +71,10 @@ int main (void)
 		delay_us(500);
 		clear_buzzer();
 		delay_us(500);
-		char teste[3];
-		sprintf(teste, "%d", get_startstop());
-		gfx_mono_draw_string(teste, 0, 16, &sysfont);
+		
+		// ----- TESTA O RETURN DO get_starstop() -----
+		// char teste[3];
+		// sprintf(teste, "%d", get_startstop());
+		// gfx_mono_draw_string(teste, 0, 16, &sysfont);
 	}
 }
