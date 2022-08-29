@@ -20,7 +20,7 @@
 #define SELECAO_PIO PIOC
 #define SELECAO_PIO_ID ID_PIOC
 #define SELECAO_PIO_IDX 31
-#define SELECAO_PIO_IDX_MASK (1u << BUT2_PIO_IDX)
+#define SELECAO_PIO_IDX_MASK (1u << SELECAO_PIO_IDX)
 
 void set_buzzer(){
 	pio_set(BUZZER_PIO, BUZZER_PIO_IDX_MASK);
@@ -36,6 +36,14 @@ int get_startstop(){
 
 int get_selecao(){
 	return pio_get(SELECAO_PIO, PIO_INPUT, SELECAO_PIO_IDX_MASK);
+}
+
+void buzzer_test(int freq){
+	double T = (1.0/freq) * 10E5;
+	clear_buzzer();
+	delay_us(T/2);
+	set_buzzer();
+	delay_us(T/2);
 }
 
 void init(){
@@ -67,10 +75,7 @@ int main (void)
 
 	//     /* Insert application code here, after the board has been initialized. */
 	while(1) {
-		set_buzzer();
-		delay_us(500);
-		clear_buzzer();
-		delay_us(500);
+		buzzer_test(440);
 		
 		// ----- TESTA O RETURN DO get_starstop() -----
 		// char teste[3];
