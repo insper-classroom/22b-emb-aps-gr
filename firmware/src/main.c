@@ -317,7 +317,6 @@ int main (void)
 			}
 			tone(melody[thisNote], noteDuration*0.9);
 			delay_ms(noteDuration*0.1);
-			set_buzzer();
 			// Fim da refatoração
 		}
 	
