@@ -39,11 +39,27 @@ int get_selecao(){
 }
 
 void buzzer_test(int freq){
-	double T = (1.0/freq) * 10E5;
+	double T = (1.0/freq) * 1E6;
 	clear_buzzer();
 	delay_us(T/2);
 	set_buzzer();
 	delay_us(T/2);
+}
+
+void tone(int freq, int time){
+	// Reproduz uma onda quadrada na freq e no tempo dado
+	// Parâmetros:
+	// - freq -> Frequência [Hz]
+	// - time -> Tempo de duração [ms]
+	double T = (1.0/freq);
+	int num = (time/T);
+	for(int i = 0; i<=num; i++){
+		clear_buzzer();
+		delay_us(T*1e6/2);
+		set_buzzer();
+		delay_us(T*1e6/2);
+	}
+
 }
 
 void init(){
@@ -75,8 +91,9 @@ int main (void)
 
 	//     /* Insert application code here, after the board has been initialized. */
 	while(1) {
-		buzzer_test(440);
-		
+		// buzzer_test(440);
+		tone(440, 5);
+		delay_s(5);		
 		// ----- TESTA O RETURN DO get_starstop() -----
 		// char teste[3];
 		// sprintf(teste, "%d", get_startstop());
