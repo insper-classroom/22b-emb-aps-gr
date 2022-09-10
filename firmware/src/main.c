@@ -205,12 +205,26 @@ int melody[] = {
 
 };
 
-int tempo = 200;
-int wholenote = 0;
 #define notes sizeof(melody) / sizeof(melody[0]) / 2
 #define wholenote (60000 * 4) / tempo
+int tempo = 200;
+int wholenote = 0;
 int divider = 0;
 int noteDuration = 0;
+
+// Flags
+volatile char flag_start_stop = 0;
+volatile char flag_next_song = 0;
+
+// Funções de Callback
+
+void start_stop_callback(void){
+	flag_start_stop = 1;
+}
+
+void next_song_callback(void){
+	flag_next_song = 1;
+}
 
 void set_buzzer(){
 	pio_set(BUZZER_PIO, BUZZER_PIO_IDX_MASK);
@@ -260,6 +274,7 @@ void tone(int freq, int time){
 }
 
 void init(){
+	// Inits básicos
 	board_init();
 	sysclk_init();
 	delay_init();
@@ -272,10 +287,28 @@ void init(){
 	pmc_enable_periph_clk(BUZZER_PIO_ID);
 	pio_set_output(BUZZER_PIO, BUZZER_PIO_IDX_MASK, 0, 0, 0);
 
-	//BUT1
+	/*--- --- --- --- --- --- CONFIG START STOP --- --- --- --- --- ---*/
 	pmc_enable_periph_clk(START_PIO_ID);
 	pio_set_input(START_PIO, START_PIO_IDX_MASK, PIO_DEFAULT);
 	pio_pull_up(START_PIO, START_PIO_IDX_MASK, 1);
+
+	// Configurando PIO com debounce
+	pio_configure(START_PIO, PIO_INPUT, START_PIO_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
+	pio_set_debounce_filter(START_PIO, START_PIO_IDX_MASK, 60);
+
+	// Associando função de callback
+	pio_handler_set(START_PIO,
+					START_PIO_ID,
+					START_PIO_IDX_MASK,
+					PIO_IT_EDGE,
+					start_stop_callback);
+	// Ativa interrupção e limpa primeira IRQ gerada na ativacao
+  	pio_enable_interrupt(START_PIO, START_PIO_IDX_MASK);
+  	pio_get_interrupt_status(START_PIO);	
+	// Configura NVIC para receber interrupcoes do PIO do botao
+	// com prioridade 4 (quanto mais próximo de 0 maior)
+	NVIC_EnableIRQ(START_PIO_ID);
+	NVIC_SetPriority(START_PIO_ID, 4); // Prioridade 4	
 }
 
 int main (void)
@@ -295,18 +328,7 @@ int main (void)
 		// ----- TESTA O RETURN DO get_starstop() -----
 		// char teste[3];
 		// sprintf(teste, "%d", get_startstop());
-		// gfx_mono_draw_string(teste, 0, 16, &sysfont);
-
-
-		// tone(NOTE_A4, 1000);
-		// delay_ms(1000);
-		// tone(NOTE_B4, 1000);
-		// delay_ms(1000);
-		// tone(NOTE_C4, 1000);
-		// delay_ms(1000);
-		// tone(NOTE_D4, 1000);
-		// delay_ms(1000);
-		
+		// gfx_mono_draw_string(teste, 0, 16, &sysfont);		
 
 		for(int thisNote = 0; thisNote < notes*2; thisNote = thisNote + 2){
 			// Refatoração do código cedido pelo Corsi
@@ -317,7 +339,10 @@ int main (void)
 			}
 			tone(melody[thisNote], noteDuration*0.9);
 			delay_ms(noteDuration*0.1);
-			// Fim da refatoração
+			// // Fim da refatoração
+      if(get_startstop()){
+        flag_start_stop == 1;
+      }
 		}
 	
 		// tone(NOTE_A4, 1000);
