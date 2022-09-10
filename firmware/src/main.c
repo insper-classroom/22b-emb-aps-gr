@@ -205,12 +205,12 @@ int melody[] = {
 
 };
 
-#define notes sizeof(melody) / sizeof(melody[0]) / 2
-#define wholenote (60000 * 4) / tempo
 int tempo = 200;
 int wholenote = 0;
 int divider = 0;
 int noteDuration = 0;
+#define notes sizeof(melody) / sizeof(melody[0]) / 2
+#define wholenote (60000 * 4) / tempo
 
 // Flags
 volatile char flag_start_stop = 0;
@@ -219,7 +219,11 @@ volatile char flag_next_song = 0;
 // Funções de Callback
 
 void start_stop_callback(void){
-	flag_start_stop = 1;
+	if (flag_start_stop==1){
+		flag_start_stop = 0;
+	} else {
+		flag_start_stop = 1;
+	}
 }
 
 void next_song_callback(void){
@@ -300,7 +304,7 @@ void init(){
 	pio_handler_set(START_PIO,
 					START_PIO_ID,
 					START_PIO_IDX_MASK,
-					PIO_IT_EDGE,
+					PIO_IT_FALL_EDGE,
 					start_stop_callback);
 	// Ativa interrupção e limpa primeira IRQ gerada na ativacao
   	pio_enable_interrupt(START_PIO, START_PIO_IDX_MASK);
@@ -314,38 +318,25 @@ void init(){
 int main (void)
 {
 	init();
-
-	// notes = sizeof(melody) / sizeof(melody[0]) / 2;
- 	// wholenote = (60000 * 4) / tempo;
-	
-	//   // Escreve na tela um circulo e um texto
-	// 	gfx_mono_draw_filled_circle(20, 16, 16, GFX_PIXEL_SET, GFX_WHOLE);
-	//     gfx_mono_draw_string("mundo", 50,16, &sysfont);
-
-	//     /* Insert application code here, after the board has been initialized. */
+	int lastNote = 0;
 	while(1) {
-
-		// ----- TESTA O RETURN DO get_starstop() -----
-		// char teste[3];
-		// sprintf(teste, "%d", get_startstop());
-		// gfx_mono_draw_string(teste, 0, 16, &sysfont);		
-
-		for(int thisNote = 0; thisNote < notes*2; thisNote = thisNote + 2){
-			// Refatoração do código cedido pelo Corsi
-			divider = melody[thisNote + 1];
-			noteDuration = (wholenote) / abs(divider);
-			if (divider < 0) {
-				noteDuration *= 1.5;
+		pmc_sleep(SAM_PM_SMODE_SLEEP_WFI);
+		if(flag_start_stop){
+			for(int thisNote = lastNote; thisNote < notes*2; thisNote = thisNote + 2){
+				// Refatoração do código cedido pelo Corsi
+				divider = melody[thisNote + 1];
+				noteDuration = (wholenote) / abs(divider);
+				if (divider < 0) {
+					noteDuration *= 1.5;
+				}
+				tone(melody[thisNote], noteDuration*0.9);
+				delay_ms(noteDuration*0.1);
+				// // Fim da refatoração
+				lastNote = thisNote;
+				if(flag_start_stop==0){
+					thisNote = notes*2;
+				}
 			}
-			tone(melody[thisNote], noteDuration*0.9);
-			delay_ms(noteDuration*0.1);
-			// // Fim da refatoração
-      if(get_startstop()){
-        flag_start_stop == 1;
-      }
 		}
-	
-		// tone(NOTE_A4, 1000);
-		// delay_ms(1000);
 	}
 }
