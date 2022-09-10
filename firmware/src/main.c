@@ -95,31 +95,10 @@
 #define NOTE_DS8 4978
 #define REST      0
 
-// Config Buzzer
-#define BUZZER_PIO PIOA
-#define BUZZER_PIO_ID ID_PIOA
-#define BUZZER_PIO_IDX 24
-#define BUZZER_PIO_IDX_MASK (1<<BUZZER_PIO_IDX)
-
-// Config botão start/pause (BUT1)
-#define START_PIO PIOD
-#define START_PIO_ID ID_PIOD
-#define START_PIO_IDX 28
-#define START_PIO_IDX_MASK (1u<<START_PIO_IDX)
-
-// Config botão de seleção (BUT2)
-#define SELECAO_PIO PIOC
-#define SELECAO_PIO_ID ID_PIOC
-#define SELECAO_PIO_IDX 31
-#define SELECAO_PIO_IDX_MASK (1u << SELECAO_PIO_IDX)
-
-int mario_melody[] = {
-
+int mario[] = {
 	// Super Mario Bros theme
 	// Score available at https://musescore.com/user/2123/scores/2145
 	// Theme by Koji Kondo
-	
-	
 	NOTE_E5,8, NOTE_E5,8, REST,8, NOTE_E5,8, REST,8, NOTE_C5,8, NOTE_E5,8, //1
 	NOTE_G5,4, REST,4, NOTE_G4,8, REST,4,
 	NOTE_C5,-4, NOTE_G4,8, REST,4, NOTE_E4,-4, // 3
@@ -201,16 +180,65 @@ int mario_melody[] = {
 	//game over sound
 	NOTE_C5,-4, NOTE_G4,-4, NOTE_E4,4, //45
 	NOTE_A4,-8, NOTE_B4,-8, NOTE_A4,-8, NOTE_GS4,-8, NOTE_AS4,-8, NOTE_GS4,-8,
-	NOTE_G4,8, NOTE_D4,8, NOTE_E4,-2,
+	NOTE_G4,8, NOTE_D4,8, NOTE_E4,-2,};
 
+int vader[] = {
+	// Darth Vader theme (Imperial March) - Star wars 
+	// Score available at https://musescore.com/user/202909/scores/1141521
+	// The tenor saxophone part was used
+	NOTE_A4,-4, NOTE_A4,-4, NOTE_A4,16, NOTE_A4,16, NOTE_A4,16, NOTE_A4,16, NOTE_F4,8, REST,8,
+	NOTE_A4,-4, NOTE_A4,-4, NOTE_A4,16, NOTE_A4,16, NOTE_A4,16, NOTE_A4,16, NOTE_F4,8, REST,8,
+	NOTE_A4,4, NOTE_A4,4, NOTE_A4,4, NOTE_F4,-8, NOTE_C5,16,
+
+	NOTE_A4,4, NOTE_F4,-8, NOTE_C5,16, NOTE_A4,2,//4
+	NOTE_E5,4, NOTE_E5,4, NOTE_E5,4, NOTE_F5,-8, NOTE_C5,16,
+	NOTE_A4,4, NOTE_F4,-8, NOTE_C5,16, NOTE_A4,2,
+	
+	NOTE_A5,4, NOTE_A4,-8, NOTE_A4,16, NOTE_A5,4, NOTE_GS5,-8, NOTE_G5,16, //7 
+	NOTE_DS5,16, NOTE_D5,16, NOTE_DS5,8, REST,8, NOTE_A4,8, NOTE_DS5,4, NOTE_D5,-8, NOTE_CS5,16,
+
+	NOTE_C5,16, NOTE_B4,16, NOTE_C5,16, REST,8, NOTE_F4,8, NOTE_GS4,4, NOTE_F4,-8, NOTE_A4,-16,//9
+	NOTE_C5,4, NOTE_A4,-8, NOTE_C5,16, NOTE_E5,2,
+
+	NOTE_A5,4, NOTE_A4,-8, NOTE_A4,16, NOTE_A5,4, NOTE_GS5,-8, NOTE_G5,16, //7 
+	NOTE_DS5,16, NOTE_D5,16, NOTE_DS5,8, REST,8, NOTE_A4,8, NOTE_DS5,4, NOTE_D5,-8, NOTE_CS5,16,
+
+	NOTE_C5,16, NOTE_B4,16, NOTE_C5,16, REST,8, NOTE_F4,8, NOTE_GS4,4, NOTE_F4,-8, NOTE_A4,-16,//9
+	NOTE_A4,4, NOTE_F4,-8, NOTE_C5,16, NOTE_A4,2,
 };
 
-int tempo = 200;
-int wholenote = 0;
+// Config Buzzer
+#define BUZZER_PIO PIOA
+#define BUZZER_PIO_ID ID_PIOA
+#define BUZZER_PIO_IDX 24
+#define BUZZER_PIO_IDX_MASK (1<<BUZZER_PIO_IDX)
+
+// Config botão start/pause (BUT1)
+#define START_PIO PIOD
+#define START_PIO_ID ID_PIOD
+#define START_PIO_IDX 28
+#define START_PIO_IDX_MASK (1u<<START_PIO_IDX)
+
+// Config botão de seleção (BUT2)
+#define SELECAO_PIO PIOC
+#define SELECAO_PIO_ID ID_PIOC
+#define SELECAO_PIO_IDX 31
+#define SELECAO_PIO_IDX_MASK (1u << SELECAO_PIO_IDX)
+
 int divider = 0;
 int noteDuration = 0;
-#define notes sizeof(mario_melody) / sizeof(mario_melody[0]) / 2
-#define wholenote (60000 * 4) / tempo
+
+/* --- --- --- --- --- CONFIG MARIO --- --- --- --- --- */
+int mario_tempo = 200;
+int mario_wholenote = 0;
+#define mario_notes sizeof(mario) / sizeof(mario[0]) / 2
+#define mario_wholenote (60000 * 4) / mario_tempo
+
+/* --- --- --- --- --- CONFIG VADER --- --- --- --- --- */
+int vader_tempo = 120;
+int vader_wholenote = 0;
+#define vader_notes sizeof(vader) / sizeof(vader[0]) / 2
+#define vader_wholenote (60000 * 4) / vader_tempo
 
 // Flags
 volatile char flag_start_stop = 0;
@@ -274,6 +302,14 @@ void tone(int freq, int time){
 			delay_us(delay);
 			i++;
 		}
+	}
+}
+
+void display_song(int songId){
+	if(songId == 0){
+		gfx_mono_draw_string("Mario Theme", 0, 0, &sysfont);
+	} else {
+		gfx_mono_draw_string("Imperial March", 0, 0, &sysfont);
 	}
 }
 
@@ -342,25 +378,60 @@ int main (void)
 {
 	init();
 	int lastNote = 0;
-	int initialSong = 0;
+	int songId = 0;
+	gfx_mono_draw_string("Mario Theme", 0, 0, &sysfont);
 	while(1) {
+
 		pmc_sleep(SAM_PM_SMODE_SLEEP_WFI);
+		
+		if(flag_selecao){
+			if(songId == 0){
+				songId = 1;
+				gfx_mono_draw_string("Vader Theme", 0, 0, &sysfont);
+			} else {
+				songId = 0;
+				gfx_mono_draw_string("Mario Theme", 0, 0, &sysfont);
+			}
+			lastNote = 0;
+			flag_selecao = 0;
+			
+		}
+
 		if(flag_start_stop){
-			for(int thisNote = lastNote; thisNote < notes*2; thisNote = thisNote + 2){
-				// Refatoração do código cedido pelo Corsi
-				divider = mario_melody[thisNote + 1];
-				noteDuration = (wholenote) / abs(divider);
-				if (divider < 0) {
-					noteDuration *= 1.5;
+			if(songId == 0){
+				for(int thisNote = lastNote; thisNote < mario_notes*2; thisNote = thisNote + 2){
+					// Refatoração do código cedido pelo Corsi
+					divider = mario[thisNote + 1];
+					noteDuration = (mario_wholenote) / abs(divider);
+					if (divider < 0) {
+						noteDuration *= 1.5;
+					}
+					tone(mario[thisNote], noteDuration*0.9);
+					delay_ms(noteDuration*0.1);
+					// // Fim da refatoração
+					lastNote = thisNote;
+					if(flag_start_stop==0){
+						thisNote = mario_notes*2;
+					}
 				}
-				tone(mario_melody[thisNote], noteDuration*0.9);
-				delay_ms(noteDuration*0.1);
-				// // Fim da refatoração
-				lastNote = thisNote;
-				if(flag_start_stop==0){
-					thisNote = notes*2;
+			} else {
+				for(int thisNote = lastNote; thisNote < vader_notes*2; thisNote = thisNote + 2){
+					// Refatoração do código cedido pelo Corsi
+					divider = vader[thisNote + 1];
+					noteDuration = (vader_wholenote) / abs(divider);
+					if (divider < 0) {
+						noteDuration *= 1.5;
+					}
+					tone(vader[thisNote], noteDuration*0.9);
+					delay_ms(noteDuration*0.1);
+					// // Fim da refatoração
+					lastNote = thisNote;
+					if(flag_start_stop==0){
+						thisNote = vader_notes*2;
+					}
 				}
 			}
+			
 		}
 	}
 }
