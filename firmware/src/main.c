@@ -113,7 +113,7 @@
 #define SELECAO_PIO_IDX 31
 #define SELECAO_PIO_IDX_MASK (1u << SELECAO_PIO_IDX)
 
-int melody[] = {
+int mario_melody[] = {
 
 	// Super Mario Bros theme
 	// Score available at https://musescore.com/user/2123/scores/2145
@@ -209,12 +209,12 @@ int tempo = 200;
 int wholenote = 0;
 int divider = 0;
 int noteDuration = 0;
-#define notes sizeof(melody) / sizeof(melody[0]) / 2
+#define notes sizeof(mario_melody) / sizeof(mario_melody[0]) / 2
 #define wholenote (60000 * 4) / tempo
 
 // Flags
 volatile char flag_start_stop = 0;
-volatile char flag_next_song = 0;
+volatile char flag_selecao = 0;
 
 // Funções de Callback
 
@@ -226,8 +226,8 @@ void start_stop_callback(void){
 	}
 }
 
-void next_song_callback(void){
-	flag_next_song = 1;
+void selecao_callback(void){
+	flag_selecao = 1;
 }
 
 void set_buzzer(){
@@ -312,24 +312,48 @@ void init(){
 	// Configura NVIC para receber interrupcoes do PIO do botao
 	// com prioridade 4 (quanto mais próximo de 0 maior)
 	NVIC_EnableIRQ(START_PIO_ID);
-	NVIC_SetPriority(START_PIO_ID, 4); // Prioridade 4	
+	NVIC_SetPriority(START_PIO_ID, 3); // Prioridade 4	
+
+	/*--- --- --- --- --- --- CONFIG NEXT SONG --- --- --- --- --- ---*/
+	pmc_enable_periph_clk(SELECAO_PIO_ID);
+	pio_set_input(SELECAO_PIO, SELECAO_PIO_IDX_MASK, PIO_DEFAULT);
+	pio_pull_up(SELECAO_PIO, SELECAO_PIO_IDX_MASK, 1);
+
+	// Configurando PIO com debounce
+	pio_configure(SELECAO_PIO, PIO_INPUT, SELECAO_PIO_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
+	pio_set_debounce_filter(SELECAO_PIO, SELECAO_PIO_IDX_MASK, 60);
+
+	// Associando função de callback
+	pio_handler_set(SELECAO_PIO,
+					SELECAO_PIO_ID,
+					SELECAO_PIO_IDX_MASK,
+					PIO_IT_FALL_EDGE,
+					selecao_callback);
+	// Ativa interrupção e limpa primeira IRQ gerada na ativacao
+  	pio_enable_interrupt(SELECAO_PIO, SELECAO_PIO_IDX_MASK);
+  	pio_get_interrupt_status(SELECAO_PIO);	
+	// Configura NVIC para receber interrupcoes do PIO do botao
+	// com prioridade 4 (quanto mais próximo de 0 maior)
+	NVIC_EnableIRQ(SELECAO_PIO_ID);
+	NVIC_SetPriority(SELECAO_PIO_ID, 4); // Prioridade 4	
 }
 
 int main (void)
 {
 	init();
 	int lastNote = 0;
+	int initialSong = 0;
 	while(1) {
 		pmc_sleep(SAM_PM_SMODE_SLEEP_WFI);
 		if(flag_start_stop){
 			for(int thisNote = lastNote; thisNote < notes*2; thisNote = thisNote + 2){
 				// Refatoração do código cedido pelo Corsi
-				divider = melody[thisNote + 1];
+				divider = mario_melody[thisNote + 1];
 				noteDuration = (wholenote) / abs(divider);
 				if (divider < 0) {
 					noteDuration *= 1.5;
 				}
-				tone(melody[thisNote], noteDuration*0.9);
+				tone(mario_melody[thisNote], noteDuration*0.9);
 				delay_ms(noteDuration*0.1);
 				// // Fim da refatoração
 				lastNote = thisNote;
