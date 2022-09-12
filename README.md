@@ -20,7 +20,7 @@ foi concluído! Isso gerará um PR no classroom que será avaliado pela equipe.
 
 ### Imagem da montagem
 
-TODO: Inserir imagem do sistema montado
+![image](https://user-images.githubusercontent.com/82293336/189555304-3183ac1c-4e9b-4e53-9157-9b6d9b63b45f.png)
 
 ### Vídeo do projeto
 
