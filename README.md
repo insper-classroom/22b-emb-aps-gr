@@ -24,7 +24,7 @@ foi concluído! Isso gerará um PR no classroom que será avaliado pela equipe.
 
 ### Vídeo do projeto
 
-TODO: Inserir link para vídeo do projeto funcionando
+https://youtu.be/5Cx5RQIC0fM
 
 ### Músicas e Direitos autorais
 
