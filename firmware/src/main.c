@@ -4,6 +4,7 @@
 #include "gfx_mono_text.h"
 #include "sysfont.h"
 
+/* INICIO DE CÓDIGO RETIRADO DE ROBSON COUTO (https://github.com/robsoncouto/arduino-songs)*/
 #define NOTE_B0  31
 #define NOTE_C1  33
 #define NOTE_CS1 35
@@ -207,6 +208,8 @@ int vader[] = {
 	NOTE_A4,4, NOTE_F4,-8, NOTE_C5,16, NOTE_A4,2,
 };
 
+/* FIM DE CÓDIGO RETIRADO DE ROBSON COUTO (https://github.com/robsoncouto/arduino-songs)*/
+
 // Config Buzzer
 #define BUZZER_PIO PIOA
 #define BUZZER_PIO_ID ID_PIOA
@@ -224,6 +227,12 @@ int vader[] = {
 #define SELECAO_PIO_ID ID_PIOC
 #define SELECAO_PIO_IDX 31
 #define SELECAO_PIO_IDX_MASK (1u << SELECAO_PIO_IDX)
+
+//LED embutido
+#define LED_PIO PIOC
+#define LED_PIO_ID ID_PIOC
+#define LED_PIO_IDX 8
+#define LED_PIO_IDX_MASK (1 << LED_PIO_IDX)
 
 int divider = 0;
 int noteDuration = 0;
@@ -247,11 +256,9 @@ volatile char flag_selecao = 0;
 // Funções de Callback
 
 void start_stop_callback(void){
-	if (flag_start_stop==1){
-		flag_start_stop = 0;
-	} else {
-		flag_start_stop = 1;
-	}
+	// Refatoração retirada do StackOverflow
+	/* https://stackoverflow.com/questions/4084050/can-you-use-arithmetic-operators-to-flip-between-0-and-1 */
+	flag_start_stop = 1 - flag_start_stop;
 }
 
 void selecao_callback(void){
@@ -326,6 +333,10 @@ void init(){
 	//Configurando Buzzer
 	pmc_enable_periph_clk(BUZZER_PIO_ID);
 	pio_set_output(BUZZER_PIO, BUZZER_PIO_IDX_MASK, 0, 0, 0);
+	
+	// Config do LED
+	pmc_enable_periph_clk(LED_PIO_ID);
+	pio_set_output(LED_PIO, LED_PIO_IDX_MASK, 0, 0, 0);
 
 	/*--- --- --- --- --- --- CONFIG START STOP --- --- --- --- --- ---*/
 	pmc_enable_periph_clk(START_PIO_ID);
@@ -381,7 +392,7 @@ int main (void)
 	int songId = 0;
 	gfx_mono_draw_string("Mario Theme", 0, 0, &sysfont);
 	while(1) {
-
+		pio_set(LED_PIO, LED_PIO_IDX_MASK);
 		pmc_sleep(SAM_PM_SMODE_SLEEP_WFI);
 		
 		if(flag_selecao){
@@ -400,15 +411,17 @@ int main (void)
 		if(flag_start_stop){
 			if(songId == 0){
 				for(int thisNote = lastNote; thisNote < mario_notes*2; thisNote = thisNote + 2){
-					// Refatoração do código cedido pelo Corsi
+					/* CÓDIGO ADAPTADO A PARTIR DE ROBSON COUTO (https://github.com/robsoncouto/arduino-songs)*/
+					/* TAMBÉM UTILIZOU-SE UMA REFATORAÇÃO ELABORADA POR RAFAEL CORSI (https://insper.github.io/ComputacaoEmbarcada/navigation/APS/APS-1-Musical-software/) */
 					divider = mario[thisNote + 1];
 					noteDuration = (mario_wholenote) / abs(divider);
 					if (divider < 0) {
 						noteDuration *= 1.5;
 					}
+					pio_clear(LED_PIO, LED_PIO_IDX_MASK);
 					tone(mario[thisNote], noteDuration*0.9);
+					pio_set(LED_PIO, LED_PIO_IDX_MASK);
 					delay_ms(noteDuration*0.1);
-					// // Fim da refatoração
 					lastNote = thisNote;
 					if(flag_start_stop==0){
 						thisNote = mario_notes*2;
@@ -416,15 +429,15 @@ int main (void)
 				}
 			} else {
 				for(int thisNote = lastNote; thisNote < vader_notes*2; thisNote = thisNote + 2){
-					// Refatoração do código cedido pelo Corsi
 					divider = vader[thisNote + 1];
 					noteDuration = (vader_wholenote) / abs(divider);
 					if (divider < 0) {
 						noteDuration *= 1.5;
 					}
+					pio_clear(LED_PIO, LED_PIO_IDX_MASK);
 					tone(vader[thisNote], noteDuration*0.9);
+					pio_set(LED_PIO, LED_PIO_IDX_MASK);
 					delay_ms(noteDuration*0.1);
-					// // Fim da refatoração
 					lastNote = thisNote;
 					if(flag_start_stop==0){
 						thisNote = vader_notes*2;

@@ -15,8 +15,8 @@ foi concluído! Isso gerará um PR no classroom que será avaliado pela equipe.
 | Função  | PINO (ex: PA11) |
 |---------|-----------------|
 | BUZZER  |      PA24       |
-| START   |                 |
-| SELEÇÃO |                 |
+| START   |      PD28       |
+| SELEÇÃO |      PC31       |
 
 ### Imagem da montagem
 
@@ -28,4 +28,4 @@ TODO: Inserir link para vídeo do projeto funcionando
 
 ### Músicas e Direitos autorais
 
-A música escolhida é a música tema para "O Poderoso Chefão", composto por Nino Rota e adaptado para monofonia por Robson Couto (disponível em https://github.com/robsoncouto/arduino-songs)
+As músicas escolhidas são a música tema para o jogo Super Mario Bros, composta por Koji Kondo, e a Marcha Imperial, composta por John Williams. As duas músicas foram adaptadas para monofonia para um projeto em arduino de Robson Couto (disponível em https://github.com/robsoncouto/arduino-songs).
